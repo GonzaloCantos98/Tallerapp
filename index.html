@@ -581,7 +581,8 @@
     <div class="modal-handle"></div>
     <div class="modal-title">Nuevo aviso</div>
     <input type="hidden" id="mav-id">
-    <div class="form-group"><label class="form-label">Cliente</label><select class="form-control" id="mav-cliente"><option value="">Seleccionar...</option></select></div>
+    <div class="form-group"><label class="form-label">Cliente</label><select class="form-control" id="mav-cliente" onchange="loadVehiculosSelect('mav-vehiculo',this.value)"><option value="">Seleccionar...</option></select></div>
+    <div class="form-group"><label class="form-label">Vehículo</label><select class="form-control" id="mav-vehiculo"><option value="">Sin vehículo específico</option></select></div>
     <div class="form-group"><label class="form-label">Tipo</label>
       <select class="form-control" id="mav-tipo">
         <option>ITV</option><option>Cambio de aceite</option><option>Revisión general</option><option>Cambio de neumáticos</option><option>Otro</option>
@@ -1042,20 +1043,20 @@ function enviarWAAviso(id){
   const a=avisos.find(x=>x.id===id);if(!a)return;
   const c=clientes.find(x=>x.id===a.clienteId)||{};
   if(!c.telefono){alert('El cliente no tiene teléfono registrado');return}
-  const vehs=(c.vehiculos||[]);
-  const vehiculoTxt=vehs.length?` para su vehículo ${vehs[0].matricula||vehs[0].marca||''}`:' para su vehículo';
+  const v=a.vehiculoId?getVehiculo(c,a.vehiculoId):null;
+  const vehiculoTxt=v?` para su ${[v.marca,v.modelo].filter(Boolean).join(' ')||'vehículo'} (${v.matricula||'sin matrícula'})`:' para su vehículo';
   const texto=`Hola ${c.nombre||''}! 👋\n\nLe recordamos que su *${a.tipo}*${vehiculoTxt} vence el *${fmtFechaAviso(a.fecha)}*.\n\n¿Quiere pedir cita? ${tallTel?'Llámenos al '+tallTel+' o responda':'Responda'} a este mensaje y le atendemos enseguida.\n\nGracias, ${tallNombre}`;
   window.open('https://wa.me/'+fmtWAPhone(c.telefono)+'?text='+encodeURIComponent(texto));
 }
 
 // AVISOS
-function saveAviso(){const fecha=document.getElementById('mav-fecha').value;if(!fecha){alert('Selecciona una fecha');return}const id=document.getElementById('mav-id').value;const data={clienteId:document.getElementById('mav-cliente').value,tipo:document.getElementById('mav-tipo').value,fecha,notas:document.getElementById('mav-notas').value.trim()};if(id)db.ref(uPath+'/avisos/'+id).update(data);else db.ref(uPath+'/avisos').push(data);closeModal('modal-aviso');}
+function saveAviso(){const fecha=document.getElementById('mav-fecha').value;if(!fecha){alert('Selecciona una fecha');return}const id=document.getElementById('mav-id').value;const data={clienteId:document.getElementById('mav-cliente').value,vehiculoId:document.getElementById('mav-vehiculo').value,tipo:document.getElementById('mav-tipo').value,fecha,notas:document.getElementById('mav-notas').value.trim()};if(id)db.ref(uPath+'/avisos/'+id).update(data);else db.ref(uPath+'/avisos').push(data);closeModal('modal-aviso');}
 function deleteAviso(id){if(!confirm('¿Eliminar?'))return;db.ref(uPath+'/avisos/'+id).remove()}
 function renderAvisos(){
   const el=document.getElementById('lista-avisos');
   if(!avisos.length){el.innerHTML='<div class="empty-state"><div class="ei">🔔</div><p>Sin avisos.</p></div>';return}
   const hoy=new Date();hoy.setHours(0,0,0,0);
-  el.innerHTML=avisos.map(a=>{const c=clientes.find(x=>x.id===a.clienteId)||{};const diff=Math.ceil((new Date(a.fecha+'T12:00:00')-hoy)/86400000);const cls=diff<0?'reminder-urgent':diff<=14?'reminder-pronto':'reminder-ok';const label=diff<0?`Vencido hace ${-diff} días`:diff===0?'¡Hoy!':'En '+diff+' días';return`<div class="card ${cls}" style="margin-bottom:10px"><div style="display:flex;justify-content:space-between"><div><div style="font-weight:700">${a.tipo}</div><div style="font-size:13px;color:var(--muted)">${c.nombre||'Sin cliente'}</div>${a.notas?`<div style="font-size:12px;color:var(--muted)">${a.notas}</div>`:''}</div><div style="text-align:right"><div style="font-size:13px;font-weight:700">${fmtFechaAviso(a.fecha)}</div><div style="font-size:11px;color:var(--muted);font-weight:600;color:${diff<0?'var(--primary)':diff<=14?'var(--warning)':'var(--success)'}">${label}</div></div></div><div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">${c.telefono?`<a href="tel:${c.telefono}" class="btn btn-secondary btn-sm">📞 Llamar</a>`:''}${c.telefono?`<button class="btn btn-whatsapp btn-sm" onclick="enviarWAAviso('${a.id}')">💬 Recordatorio</button>`:''}<button class="btn btn-danger btn-sm" onclick="deleteAviso('${a.id}')">🗑️</button></div></div>`;}).join('');
+  el.innerHTML=avisos.map(a=>{const c=clientes.find(x=>x.id===a.clienteId)||{};const v=a.vehiculoId?getVehiculo(c,a.vehiculoId):null;const diff=Math.ceil((new Date(a.fecha+'T12:00:00')-hoy)/86400000);const cls=diff<0?'reminder-urgent':diff<=14?'reminder-pronto':'reminder-ok';const label=diff<0?`Vencido hace ${-diff} días`:diff===0?'¡Hoy!':'En '+diff+' días';return`<div class="card ${cls}" style="margin-bottom:10px"><div style="display:flex;justify-content:space-between"><div><div style="font-weight:700">${a.tipo}</div><div style="font-size:13px;color:var(--muted)">${c.nombre||'Sin cliente'}${v?' · '+v.matricula:''}</div>${v&&(v.marca||v.modelo)?`<div style="font-size:12px;color:var(--muted)">${[v.marca,v.modelo].filter(Boolean).join(' ')}</div>`:''} ${a.notas?`<div style="font-size:12px;color:var(--muted)">${a.notas}</div>`:''}</div><div style="text-align:right"><div style="font-size:13px;font-weight:700">${fmtFechaAviso(a.fecha)}</div><div style="font-size:11px;font-weight:600;color:${diff<0?'var(--primary)':diff<=14?'var(--warning)':'var(--success)'}">${label}</div></div></div><div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">${c.telefono?`<a href="tel:${c.telefono}" class="btn btn-secondary btn-sm">📞 Llamar</a>`:''}${c.telefono?`<button class="btn btn-whatsapp btn-sm" onclick="enviarWAAviso('${a.id}')">💬 Recordatorio</button>`:''}<button class="btn btn-danger btn-sm" onclick="deleteAviso('${a.id}')">🗑️</button></div></div>`;}).join('');
 }
 
 // INICIO
