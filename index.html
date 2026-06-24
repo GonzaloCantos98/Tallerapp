@@ -514,6 +514,17 @@
   </div>
 </div>
 
+<!-- MODAL HISTORIAL VEHÍCULO -->
+<div class="modal-overlay" id="modal-historial">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div id="historial-body"></div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal('modal-historial')">Cerrar</button>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL CITA -->
 <div class="modal-overlay" id="modal-cita">
   <div class="modal">
@@ -576,7 +587,7 @@ const auth=firebase.auth(),db=firebase.database();
 
 let user=null,uPath=null;
 let clientes=[],presupuestos=[],caja=[],avisos=[],citas=[],ordenes=[];
-let tallNombre='Mi Taller',tallTel='',tallDir='',tallCif='';
+let tallNombre='Mi Taller',tallTel='',tallDir='',tallCif='',tallFacturaContador=0,tallFacturaAño=0;
 let currentPage='inicio',filterActivo='todos',filterOrden='todos';
 let lineas=[],listeners=[],agendaDate=new Date();
 let chartIngresos=null;
@@ -625,7 +636,7 @@ function startListeners(){
   function check(){if(Object.values(loaded).every(Boolean))renderCurrentPage()}
 
   const rc=db.ref(uPath+'/config');
-  rc.on('value',s=>{const d=s.val()||{};tallNombre=d.nombre||'Mi Taller';tallTel=d.telefono||'';tallDir=d.direccion||'';tallCif=d.cif||'';document.getElementById('p-nombre-display').textContent=tallNombre;document.getElementById('pf-nombre').value=tallNombre;document.getElementById('pf-tel').value=tallTel;document.getElementById('pf-dir').value=tallDir;document.getElementById('pf-cif').value=tallCif;loaded.config=true;check();});
+  rc.on('value',s=>{const d=s.val()||{};tallNombre=d.nombre||'Mi Taller';tallTel=d.telefono||'';tallDir=d.direccion||'';tallCif=d.cif||'';tallFacturaContador=d.facturaContador||0;tallFacturaAño=d.facturaAño||0;document.getElementById('p-nombre-display').textContent=tallNombre;document.getElementById('pf-nombre').value=tallNombre;document.getElementById('pf-tel').value=tallTel;document.getElementById('pf-dir').value=tallDir;document.getElementById('pf-cif').value=tallCif;loaded.config=true;check();});
   listeners.push(()=>rc.off());
 
   function mkL(ref,arr,sortFn,key){
@@ -722,13 +733,38 @@ function verCliente(id){
       <div class="stat-card"><div class="stat-value" style="font-size:18px">${fmt(total)}</div><div class="stat-label">Facturado</div></div>
     </div>
     <div class="section-title" style="margin-top:0">🚗 Vehículos</div>
-    <div style="margin-bottom:12px">${vehs.length?vehs.map(v=>`<div class="vehiculo-chip" onclick="editVehiculo('${id}','${v.id}')">${v.matricula||'Sin matrícula'} · ${v.marca||''} ${v.modelo||''}</div>`).join(''):'<div style="font-size:13px;color:var(--muted)">Sin vehículos</div>'}</div>
+    <div style="margin-bottom:12px">${vehs.length?vehs.map(v=>`<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px"><div class="vehiculo-chip" onclick="editVehiculo('${id}','${v.id}')" style="flex:1">${v.matricula||'Sin matrícula'} · ${v.marca||''} ${v.modelo||''}</div><button onclick="verHistorialVehiculo('${id}','${v.id}')" class="btn btn-secondary btn-sm" style="flex-shrink:0">📋 Historial</button></div>`).join(''):'<div style="font-size:13px;color:var(--muted)">Sin vehículos</div>'}</div>
     <button class="btn btn-secondary btn-block btn-sm" onclick="abrirNuevoVehiculo('${id}')">➕ Añadir vehículo</button>
     ${c.notas?`<div class="card" style="margin-top:10px;font-size:14px"><b>📝</b> ${c.notas}</div>`:''}
     <button class="btn btn-danger btn-block btn-sm" onclick="deleteCliente('${id}')" style="margin-top:10px">🗑️ Eliminar cliente</button>
   `;
   document.getElementById('btn-edit-cliente').onclick=()=>editCliente(id);
   openModal('modal-ver-cliente');
+}
+
+function verHistorialVehiculo(clienteId,vehiculoId){
+  const c=clientes.find(x=>x.id===clienteId)||{};
+  const v=getVehiculo(c,vehiculoId);
+  const presV=presupuestos.filter(p=>p.vehiculoId===vehiculoId).sort((a,b)=>new Date(b.fecha)-new Date(a.fecha));
+  const ordV=ordenes.filter(o=>o.vehiculoId===vehiculoId).sort((a,b)=>new Date(b.fechaEntrada)-new Date(a.fechaEntrada));
+  const totalGastado=presV.filter(p=>p.estado==='cobrado').reduce((a,p)=>a+p.total,0);
+  const eBadge={pendiente:'badge-warning',cobrado:'badge-success',presupuesto:'badge-secondary'};
+  document.getElementById('historial-body').innerHTML=`
+    <div style="margin-bottom:16px">
+      <div style="font-size:18px;font-weight:700">📋 Historial del vehículo</div>
+      <div style="font-size:15px;color:var(--primary);font-weight:700;margin-top:4px">${v?v.matricula+' · '+[v.marca,v.modelo].filter(Boolean).join(' '):'Vehículo'}</div>
+      <div style="font-size:13px;color:var(--muted);margin-top:2px">Propietario: ${c.nombre||'-'}</div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:16px">
+      <div class="stat-card"><div class="stat-value">${presV.length}</div><div class="stat-label">Trabajos</div></div>
+      <div class="stat-card"><div class="stat-value" style="font-size:16px">${fmt(totalGastado)}</div><div class="stat-label">Cobrado</div></div>
+      <div class="stat-card"><div class="stat-value">${ordV.length}</div><div class="stat-label">Entradas</div></div>
+    </div>
+    ${ordV.length?`<div class="section-title" style="margin-top:0">🔧 Entradas al taller</div>`+'<div class="card">'+ordV.map(o=>{const eLabel={recibido:'Recibido',en_taller:'En taller',listo:'Listo ✅',entregado:'Entregado'};return`<div class="list-item"><div style="font-size:22px">🔧</div><div class="list-content"><div class="list-title">${o.trabajo||'Trabajo sin descripción'}</div><div class="list-meta">${fmtFecha(o.fechaEntrada)}${o.kmEntrada?' · '+Number(o.kmEntrada).toLocaleString('es')+' km':''} · ${eLabel[o.estado]||o.estado}</div></div></div>`;}).join('')+'</div>':''}
+    ${presV.length?`<div class="section-title">💶 Presupuestos y facturas</div>`+'<div class="card">'+presV.map(p=>`<div class="list-item" onclick="closeModal('modal-historial');verPresupuesto('${p.id}')"><div class="list-content"><div class="list-title">${p.descripcion||'Trabajo'}${p.numeroFactura?' <span style="font-size:11px;color:var(--muted)">· Fac. '+p.numeroFactura+'</span>':''}</div><div class="list-meta">${fmtFecha(p.fecha)}</div></div><div class="list-right"><div style="font-weight:700">${fmt(p.total)}</div><span class="badge ${eBadge[p.estado]}">${p.estado}</span></div></div>`).join('')+'</div>':'<div class="empty-state"><div class="ei">📋</div><p>Sin trabajos registrados</p></div>'}
+  `;
+  closeModal('modal-ver-cliente');
+  openModal('modal-historial');
 }
 
 function renderClientes(){
@@ -786,7 +822,7 @@ function verPresupuesto(id){
   document.getElementById('ver-presupuesto-body').innerHTML=`
     <div style="margin-bottom:16px">
       <div style="display:flex;justify-content:space-between;align-items:flex-start">
-        <div><div style="font-size:18px;font-weight:700">${p.descripcion||'Trabajo'}</div><div style="font-size:14px;color:var(--muted);margin-top:2px">${c.nombre||'Cliente eliminado'}${v?' · '+v.matricula:''}</div><div style="font-size:12px;color:var(--muted)">${fmtFecha(p.fecha)}</div></div>
+        <div><div style="font-size:18px;font-weight:700">${p.descripcion||'Trabajo'}</div><div style="font-size:14px;color:var(--muted);margin-top:2px">${c.nombre||'Cliente eliminado'}${v?' · '+v.matricula:''}</div><div style="font-size:12px;color:var(--muted)">${fmtFecha(p.fecha)}${p.numeroFactura?' · <b>Factura '+p.numeroFactura+'</b>':''}</div></div>
         <span class="badge ${eBadge[p.estado]}">${eLabel[p.estado]}</span>
       </div>
     </div>
@@ -809,10 +845,14 @@ function verPresupuesto(id){
 function cobrarPresupuesto(id){
   const p=presupuestos.find(x=>x.id===id);if(!p)return;
   const c=clientes.find(x=>x.id===p.clienteId)||{};
-  db.ref(uPath+'/presupuestos/'+id).update({estado:'cobrado'});
+  const año=new Date().getFullYear();
+  const nuevoContador=tallFacturaAño===año?(tallFacturaContador+1):1;
+  const numFactura=año+'-'+String(nuevoContador).padStart(3,'0');
+  db.ref(uPath+'/config').update({facturaContador:nuevoContador,facturaAño:año});
+  db.ref(uPath+'/presupuestos/'+id).update({estado:'cobrado',numeroFactura:numFactura});
   db.ref(uPath+'/caja').push({tipo:'entrada',concepto:(p.descripcion||'Trabajo')+' - '+(c.nombre||''),importe:p.total,fecha:new Date().toISOString()});
   closeModal('modal-ver-presupuesto');
-  alert('✅ Marcado como cobrado y añadido a la caja.');
+  alert('✅ Factura '+numFactura+' · Cobrado y añadido a la caja.');
 }
 
 function editPresupuesto(id){
@@ -839,7 +879,7 @@ function renderPresupuestos(){
   if(!f.length){el.innerHTML='<div class="empty-state"><div class="ei">📋</div><p>No hay presupuestos.</p></div>';return}
   const eBadge={pendiente:'badge-warning',cobrado:'badge-success',presupuesto:'badge-secondary'};
   const eLabel={pendiente:'Pendiente',cobrado:'Cobrado',presupuesto:'Presupuesto'};
-  el.innerHTML='<div class="card">'+f.map(p=>{const c=clientes.find(x=>x.id===p.clienteId)||{};const v=getVehiculo(c,p.vehiculoId);return`<div class="list-item" onclick="verPresupuesto('${p.id}')"><div class="avatar" style="background:linear-gradient(135deg,#264653,#2a9d8f)">${(c.nombre||'?')[0].toUpperCase()}</div><div class="list-content"><div class="list-title">${p.descripcion||'Trabajo'}</div><div class="list-meta">${c.nombre||'Sin cliente'}${v?' · '+v.matricula:''} · ${fmtFecha(p.fecha)}</div></div><div class="list-right"><div style="font-weight:700">${fmt(p.total)}</div><span class="badge ${eBadge[p.estado]}">${eLabel[p.estado]}</span></div></div>`;}).join('')+'</div>';
+  el.innerHTML='<div class="card">'+f.map(p=>{const c=clientes.find(x=>x.id===p.clienteId)||{};const v=getVehiculo(c,p.vehiculoId);return`<div class="list-item" onclick="verPresupuesto('${p.id}')"><div class="avatar" style="background:linear-gradient(135deg,#264653,#2a9d8f)">${(c.nombre||'?')[0].toUpperCase()}</div><div class="list-content"><div class="list-title">${p.descripcion||'Trabajo'}</div><div class="list-meta">${c.nombre||'Sin cliente'}${v?' · '+v.matricula:''} · ${fmtFecha(p.fecha)}${p.numeroFactura?' · Fac. '+p.numeroFactura:''}</div></div><div class="list-right"><div style="font-weight:700">${fmt(p.total)}</div><span class="badge ${eBadge[p.estado]}">${eLabel[p.estado]}</span></div></div>`;}).join('')+'</div>';
 }
 
 // WHATSAPP
@@ -1029,7 +1069,7 @@ function generarPDF(id){
   if(tallDir)doc.text(tallDir,20,31);
   if(tallCif)doc.text('CIF: '+tallCif,20,37);
   doc.setFontSize(14);doc.setFont('helvetica','bold');doc.text(p.estado==='presupuesto'?'PRESUPUESTO':'FACTURA',190,18,{align:'right'});
-  doc.setFontSize(9);doc.setFont('helvetica','normal');doc.text(fmtFecha(p.fecha),190,26,{align:'right'});doc.text('Nº '+p.id.substr(-6).toUpperCase(),190,32,{align:'right'});
+  doc.setFontSize(9);doc.setFont('helvetica','normal');doc.text(fmtFecha(p.fecha),190,26,{align:'right'});doc.text('Nº '+(p.numeroFactura||p.id.substr(-6).toUpperCase()),190,32,{align:'right'});
   doc.setTextColor(0,0,0);doc.setFontSize(11);doc.setFont('helvetica','bold');doc.text('CLIENTE',20,55);
   doc.setFont('helvetica','normal');doc.setFontSize(10);doc.text(c.nombre||'-',20,62);
   if(v)doc.text('Vehículo: '+[v.marca,v.modelo].filter(Boolean).join(' ')+(v.matricula?' ('+v.matricula+')':''),20,68);
