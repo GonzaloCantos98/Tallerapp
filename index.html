@@ -753,6 +753,7 @@ function saveVehiculo(){
   closeModal('modal-vehiculo');
 }
 function getVehiculo(c,vehiculoId){if(!c||!vehiculoId)return null;return(c.vehiculos||[]).find(v=>v.id===vehiculoId)||null;}
+function getLineas(p){const l=p.lineas;if(!l)return[];if(Array.isArray(l))return l;return Object.values(l);}
 function loadVehiculosSelect(selectId,clienteId){const sel=document.getElementById(selectId);const c=clientes.find(x=>x.id===clienteId);const vehs=(c?.vehiculos||[]);sel.innerHTML='<option value="">Sin vehículo específico</option>'+vehs.map(v=>`<option value="${v.id}">${v.matricula||'Sin matrícula'} ${v.marca?'· '+v.marca:''} ${v.modelo||''}</option>`).join('');}
 function fillClientesSelect(selectId){const sel=document.getElementById(selectId);const cur=sel.value;sel.innerHTML='<option value="">Seleccionar cliente...</option>'+clientes.map(c=>`<option value="${c.id}" ${c.id===cur?'selected':''}>${c.nombre}</option>`).join('');}
 
@@ -790,7 +791,7 @@ function verPresupuesto(id){
       </div>
     </div>
     <div class="card" style="margin-bottom:12px">
-      ${(p.lineas||[]).map(l=>`<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border)"><div><div style="font-size:14px">${l.concepto||'Concepto'}</div><div style="font-size:12px;color:var(--muted)">${l.cantidad} ud × ${fmt(l.precio)}</div></div><div style="font-weight:600">${fmt(l.precio*l.cantidad)}</div></div>`).join('')}
+      ${getLineas(p).map(l=>`<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border)"><div><div style="font-size:14px">${l.concepto||'Concepto'}</div><div style="font-size:12px;color:var(--muted)">${l.cantidad} ud × ${fmt(l.precio)}</div></div><div style="font-weight:600">${fmt(l.precio*l.cantidad)}</div></div>`).join('')}
       <div style="display:flex;justify-content:space-between;margin-top:8px;font-size:13px"><span>Subtotal</span><span>${fmt(p.subtotal)}</span></div>
       <div style="display:flex;justify-content:space-between;font-size:13px"><span>IVA 21%</span><span>${fmt(p.iva)}</span></div>
       <div style="display:flex;justify-content:space-between;font-weight:800;font-size:17px;margin-top:6px;color:var(--primary)"><span>TOTAL</span><span>${fmt(p.total)}</span></div>
@@ -826,7 +827,7 @@ function editPresupuesto(id){
   document.getElementById('mp-notas').value=p.notas||'';
   document.getElementById('mp-estado').value=p.estado;
   document.getElementById('mp-title').textContent='Editar presupuesto';
-  lineas=(p.lineas||[]).map(l=>({...l}));renderLineas();
+  lineas=getLineas(p).map(l=>({...l}));renderLineas();
   document.getElementById('modal-presupuesto').classList.add('active');
 }
 
@@ -849,7 +850,7 @@ function enviarWAPresupuesto(id){
   const c=clientes.find(x=>x.id===p.clienteId)||{};
   const v=getVehiculo(c,p.vehiculoId);
   if(!c.telefono){alert('El cliente no tiene teléfono registrado');return}
-  const lineasTxt=(p.lineas||[]).map(l=>`• ${l.concepto}: ${fmt(l.precio*l.cantidad)}`).join('\n');
+  const lineasTxt=getLineas(p).map(l=>`• ${l.concepto}: ${fmt(l.precio*l.cantidad)}`).join('\n');
   const texto=`Hola ${c.nombre||''}! 👋\n\nLe enviamos el presupuesto para${v?' su '+[v.marca,v.modelo].filter(Boolean).join(' ')+' ('+v.matricula+')':' su vehículo'}:\n\n*${p.descripcion||'Trabajo'}*\n\n${lineasTxt}\n\n💶 *TOTAL: ${fmt(p.total)}* (IVA incluido)\n\nPara cualquier consulta estamos a su disposición.\nSaludos, ${tallNombre}`;
   window.open('https://wa.me/'+fmtWAPhone(c.telefono)+'?text='+encodeURIComponent(texto));
   closeModal('modal-ver-presupuesto');
@@ -1039,7 +1040,7 @@ function generarPDF(id){
   doc.setTextColor(255,255,255);doc.setFontSize(9);doc.setFont('helvetica','bold');
   doc.text('CONCEPTO',22,y);doc.text('CANT',130,y,{align:'right'});doc.text('PRECIO',155,y,{align:'right'});doc.text('TOTAL',188,y,{align:'right'});
   y+=8;doc.setTextColor(0,0,0);doc.setFont('helvetica','normal');
-  (p.lineas||[]).forEach((l,i)=>{if(i%2===0){doc.setFillColor(248,249,250);doc.rect(20,y-4,170,7,'F')}doc.text(l.concepto||'-',22,y);doc.text(String(l.cantidad),130,y,{align:'right'});doc.text(fmt(l.precio),155,y,{align:'right'});doc.text(fmt(l.precio*l.cantidad),188,y,{align:'right'});y+=7});
+  getLineas(p).forEach((l,i)=>{if(i%2===0){doc.setFillColor(248,249,250);doc.rect(20,y-4,170,7,'F')}doc.text(l.concepto||'-',22,y);doc.text(String(l.cantidad),130,y,{align:'right'});doc.text(fmt(l.precio),155,y,{align:'right'});doc.text(fmt(l.precio*l.cantidad),188,y,{align:'right'});y+=7});
   y+=5;doc.line(120,y,190,y);y+=5;
   doc.text('Subtotal:',130,y);doc.text(fmt(p.subtotal),188,y,{align:'right'});y+=6;
   doc.text('IVA (21%):',130,y);doc.text(fmt(p.iva),188,y,{align:'right'});y+=2;doc.line(120,y+2,190,y+2);y+=6;
@@ -1089,3 +1090,4 @@ function fmtHora(iso){return new Date(iso).toLocaleTimeString('es-ES',{hour:'2-d
 </script>
 </body>
 </html>
+    
