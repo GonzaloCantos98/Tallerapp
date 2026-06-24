@@ -15,6 +15,42 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
   <style>
+    .icon {
+  width: 18px;
+  height: 18px;
+  stroke-width: 2;
+  flex-shrink: 0;
+  vertical-align: middle;
+}
+
+.icon-sm {
+  width: 16px;
+  height: 16px;
+}
+
+.icon-lg {
+  width: 28px;
+  height: 28px;
+}
+
+.empty-icon {
+  width: 46px;
+  height: 46px;
+  color: var(--muted);
+  opacity: .55;
+  margin-bottom: 12px;
+}
+
+.page-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn i {
+  width: 18px;
+  height: 18px;
+}
     :root {
       --primary:#e63946;--primary-dark:#c1121f;--bg:#f8f9fa;--card:#fff;
       --text:#212529;--muted:#6c757d;--border:#dee2e6;
@@ -258,9 +294,18 @@
       <div class="stat-card"><div class="stat-value" id="s-mes">0€</div><div class="stat-label">Este mes</div></div>
     </div>
     <div class="section-title">Accesos rápidos</div>
-    <button class="btn btn-primary btn-block" onclick="showPage('clientes');openModal('modal-cliente')">➕ Nuevo cliente</button>
-    <button class="btn btn-secondary btn-block" onclick="showPage('presupuestos');openModal('modal-presupuesto')">📋 Nuevo presupuesto</button>
-    <button class="btn btn-secondary btn-block" onclick="showPage('agenda');openModal('modal-cita')">📅 Nueva cita</button>
+<button class="btn btn-primary btn-block" onclick="showPage('clientes');openModal('modal-cliente')">
+  <i data-lucide="user-plus" class="icon"></i>
+  Nuevo cliente
+</button>
+<button class="btn btn-secondary btn-block" onclick="showPage('presupuestos');openModal('modal-presupuesto')">
+  <i data-lucide="file-plus-2" class="icon"></i>
+  Nuevo presupuesto
+</button>
+    <button class="btn btn-secondary btn-block" onclick="showPage('agenda');openModal('modal-cita')">
+  <i data-lucide="calendar-plus" class="icon"></i>
+  Nueva cita
+</button>
     <div class="section-title">Citas de hoy</div>
     <div id="inicio-citas" class="card"><div class="empty-state"><div class="ei">📅</div><p>Sin citas hoy</p></div></div>
     <div class="section-title">Últimos presupuestos</div>
@@ -412,7 +457,10 @@
     <div class="form-group"><label class="form-label">Notas</label><textarea class="form-control" id="mc-notas" rows="2" placeholder="Notas..."></textarea></div>
     <div class="modal-actions">
       <button class="btn btn-secondary" onclick="closeModal('modal-cliente')">Cancelar</button>
-      <button class="btn btn-primary" onclick="saveCliente()">💾 Guardar</button>
+      <button class="btn btn-primary" onclick="saveCliente()">
+  <i data-lucide="save" class="icon"></i>
+  Guardar
+</button>
     </div>
   </div>
 </div>
