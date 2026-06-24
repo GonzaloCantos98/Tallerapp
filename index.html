@@ -1082,7 +1082,7 @@ function generarPDFOrden(id){
 }
 
 // HELPERS
-function fmt(n){return(n||0).toFixed(2).replace('.',',')+' €'}
+function fmt(n){return(parseFloat(n)||0).toFixed(2).replace('.',',')+' €'}
 function fmtFecha(iso){return new Date(iso).toLocaleDateString('es-ES',{day:'2-digit',month:'2-digit',year:'numeric'})}
 function fmtFechaCorta(d){return new Date(d).toLocaleDateString('es-ES',{weekday:'long',day:'numeric',month:'long'})}
 function fmtFechaAviso(str){return new Date(str+'T12:00:00').toLocaleDateString('es-ES',{day:'2-digit',month:'2-digit',year:'numeric'})}
