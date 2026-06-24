@@ -7,6 +7,8 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="theme-color" content="#1a1a2e">
   <title>TallerApp</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide@0.263.1/dist/umd/lucide.min.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
@@ -20,7 +22,7 @@
       --shadow:0 2px 12px rgba(0,0,0,.08);
     }
     *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+    body{font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
 
     /* LOADING */
     #screen-loading{position:fixed;inset:0;background:linear-gradient(135deg,#1a1a2e,#16213e);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;color:#fff}
@@ -60,7 +62,8 @@
     /* BOTTOM NAV */
     .bottom-nav{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid var(--border);display:flex;z-index:100;padding-bottom:env(safe-area-inset-bottom);box-shadow:0 -2px 10px rgba(0,0,0,.08)}
     .nav-btn{flex:1;display:flex;flex-direction:column;align-items:center;padding:8px 4px;border:none;background:none;cursor:pointer;font-size:10px;color:var(--muted);gap:3px}
-    .nav-btn .ni{font-size:22px;transition:transform .2s}
+    .nav-btn svg{width:22px;height:22px;stroke-width:1.75;transition:stroke-width .15s}
+.nav-btn.active svg{stroke-width:2.25}
     .nav-btn.active{color:var(--primary)}
     .nav-btn.active .ni{transform:scale(1.15)}
 
@@ -83,6 +86,7 @@
     .mas-item{background:var(--card);border-radius:var(--radius);padding:20px 16px;box-shadow:var(--shadow);text-align:center;cursor:pointer;border:none;width:100%}
     .mas-item:active{transform:scale(.97)}
     .mas-item .mas-icon{font-size:36px;margin-bottom:8px}
+.mas-item .mas-icon svg{width:32px;height:32px;stroke:var(--primary)}
     .mas-item .mas-label{font-size:14px;font-weight:700;color:var(--text)}
     .mas-item .mas-sub{font-size:11px;color:var(--muted);margin-top:2px}
 
@@ -205,7 +209,7 @@
 <div id="screen-login">
   <div class="login-box">
     <div class="login-logo">
-      <div class="icon">🔧</div>
+<i data-lucide="wrench" style="width:40px;height:40px"></i>
       <h1>TallerApp</h1>
       <p>Gestión profesional para tu taller</p>
     </div>
@@ -299,12 +303,12 @@
   <!-- MÁS -->
   <div id="page-mas" class="page">
     <div class="mas-grid">
-      <button class="mas-item" onclick="showPage('caja')"><div class="mas-icon">💰</div><div class="mas-label">Caja</div><div class="mas-sub">Control de cobros</div></button>
-      <button class="mas-item" onclick="showPage('estadisticas')"><div class="mas-icon">📊</div><div class="mas-label">Estadísticas</div><div class="mas-sub">Ingresos y análisis</div></button>
-      <button class="mas-item" onclick="showPage('ordenes')"><div class="mas-icon">🔧</div><div class="mas-label">Órdenes</div><div class="mas-sub">Recepción de vehículos</div></button>
-      <button class="mas-item" onclick="showPage('avisos')"><div class="mas-icon">🔔</div><div class="mas-label">Avisos</div><div class="mas-sub">ITV, revisiones...</div></button>
-      <button class="mas-item" onclick="showPage('perfil')" style="grid-column:span 2"><div class="mas-icon">⚙️</div><div class="mas-label">Perfil del taller</div><div class="mas-sub">Datos, cuenta, configuración</div></button>
-    </div>
+  <button class="mas-item" onclick="showPage('caja')"><div class="mas-icon"><i data-lucide="banknote"></i></div><div class="mas-label">Caja</div><div class="mas-sub">Control de cobros</div></button>
+  <button class="mas-item" onclick="showPage('estadisticas')"><div class="mas-icon"><i data-lucide="bar-chart-2"></i></div><div class="mas-label">Estadísticas</div><div class="mas-sub">Ingresos y análisis</div></button>
+  <button class="mas-item" onclick="showPage('ordenes')"><div class="mas-icon"><i data-lucide="wrench"></i></div><div class="mas-label">Órdenes</div><div class="mas-sub">Recepción de vehículos</div></button>
+  <button class="mas-item" onclick="showPage('avisos')"><div class="mas-icon"><i data-lucide="bell"></i></div><div class="mas-label">Avisos</div><div class="mas-sub">ITV, revisiones...</div></button>
+  <button class="mas-item" onclick="showPage('perfil')" style="grid-column:span 2"><div class="mas-icon"><i data-lucide="settings"></i></div><div class="mas-label">Perfil del taller</div><div class="mas-sub">Datos, cuenta, configuración</div></button>
+</div>
   </div>
 
   <!-- CAJA -->
@@ -388,12 +392,12 @@
   </div>
 
   <nav class="bottom-nav">
-    <button class="nav-btn active" onclick="showPage('inicio')" id="nav-inicio"><span class="ni">🏠</span>Inicio</button>
-    <button class="nav-btn" onclick="showPage('clientes')" id="nav-clientes"><span class="ni">👥</span>Clientes</button>
-    <button class="nav-btn" onclick="showPage('presupuestos')" id="nav-presupuestos"><span class="ni">📋</span>Presup.</button>
-    <button class="nav-btn" onclick="showPage('agenda')" id="nav-agenda"><span class="ni">📅</span>Agenda</button>
-    <button class="nav-btn" onclick="showPage('mas')" id="nav-mas"><span class="ni">☰</span>Más</button>
-  </nav>
+  <button class="nav-btn active" onclick="showPage('inicio')" id="nav-inicio"><i data-lucide="home"></i>Inicio</button>
+  <button class="nav-btn" onclick="showPage('clientes')" id="nav-clientes"><i data-lucide="users"></i>Clientes</button>
+  <button class="nav-btn" onclick="showPage('presupuestos')" id="nav-presupuestos"><i data-lucide="file-text"></i>Presup.</button>
+  <button class="nav-btn" onclick="showPage('agenda')" id="nav-agenda"><i data-lucide="calendar"></i>Agenda</button>
+  <button class="nav-btn" onclick="showPage('mas')" id="nav-mas"><i data-lucide="grid"></i>Más</button>
+</nav>
 </div>
 
 <!-- MODAL CLIENTE -->
@@ -681,7 +685,7 @@ function startListeners(){
 }
 function stopListeners(){listeners.forEach(f=>f());listeners=[];clientes=[];presupuestos=[];caja=[];avisos=[];citas=[];ordenes=[];}
 
-const pageTitles={inicio:'🏠 Inicio',clientes:'👥 Clientes',presupuestos:'📋 Presupuestos',agenda:'📅 Agenda',mas:'☰ Más',caja:'💰 Caja',estadisticas:'📊 Estadísticas',ordenes:'🔧 Órdenes de trabajo',avisos:'🔔 Avisos',perfil:'⚙️ Perfil'};
+const pageTitles={inicio:'Inicio',clientes:'Clientes',presupuestos:'Presupuestos',agenda:'Agenda',mas:'Menú',caja:'Caja',estadisticas:'Estadísticas',ordenes:'Órdenes de trabajo',avisos:'Avisos',perfil:'Perfil del taller'};
 const navIds=['inicio','clientes','presupuestos','agenda','mas'];
 
 function showPage(name){
@@ -1179,7 +1183,7 @@ function fmtFecha(iso){return new Date(iso).toLocaleDateString('es-ES',{day:'2-d
 function fmtFechaCorta(d){return new Date(d).toLocaleDateString('es-ES',{weekday:'long',day:'numeric',month:'long'})}
 function fmtFechaAviso(str){return new Date(str+'T12:00:00').toLocaleDateString('es-ES',{day:'2-digit',month:'2-digit',year:'numeric'})}
 function fmtHora(iso){return new Date(iso).toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'})}
+document.addEventListener('DOMContentLoaded',()=>{if(window.lucide)lucide.createIcons();});
 </script>
 </body>
 </html>
-    
